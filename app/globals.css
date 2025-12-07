@@ -1,43 +1,26 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #ffffff;
-  --primary: #B6CBBD;
-  --secondary: #754E1A;
-  --thirds: #CBA35C;
-  --fourth: #F8E1B7;
+@theme {
+    --color-background: #fffdf5;
+    --color-foreground: #000000;
+
+    /* Warna Kolom - Pastikan ini jadi utility colors */
+    --color-todo: #ffde59;
+    --color-inprogress: #5de2e7;
+    --color-done: #7ed957;
+    --color-card: #ffffff;
+
+    --font-sans: "Inter", sans-serif;
+
+    /* Definisikan shadow agar bisa dipakai sbg 'shadow-neo' */
+    --shadow-neo: 4px 4px 0px 0px #000000;
 }
 
+/* Dot Pattern Background */
 body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.primary-text{
-    color: var(--primary);
-}
-
-.primary-bg{
-    background-color: var(--primary);
-}
-
-.secondary-text{
-    color: var(--secondary);
-}
-.secondary-bg{
-    background-color: var(--secondary);
-}
-
-.third-text{
-    color: var(--thirds);
-}
-.third-bg{
-    background-color: var(--thirds);
-}
-
-.fourth-text{
-    color: var(--fourth);
-}
-.fourth-bg{
-    background-color: var(--fourth);
+    background-color: var(--color-background);
+    background-image: radial-gradient(gray 1px, transparent 1px);
+    background-size: 24px 24px; /* Jarak antar titik */
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
 }
