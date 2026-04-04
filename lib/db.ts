@@ -1,16 +1,14 @@
-// import Dexie, {add, type EntityTable} from 'dexie';
-// import { Task } from '@/types/task';
+import { TaskCard, TaskList } from "@/types/task";
+import Dexie, { type EntityTable } from "dexie";
 
-// const db = new Dexie('RyuKanbanDB') as Dexie & {
-//     tasks: EntityTable<Task, 'id'>;
-// };
+const db = new Dexie("RyukanbanDB") as Dexie & {
+    lists: EntityTable<TaskList, "id">;
+    cards: EntityTable<TaskCard, "id">;
+};
 
-// db.version(1).stores({
-//     tasks: '++id, title, status, createdAt'
-// });
+db.version(1).stores({
+    lists: "id, position",
+    cards: "id, listId, position",
+});
 
-// export const addTask = (task: Omit<Task, 'id'>) => {
-//     return db.tasks.add({
-//         ...task, createdAt: new Date()
-//     });
-// };
+export { db };

@@ -1,17 +1,22 @@
-export interface Card {
-  id: string,
-  title: string,
-  createdAt?: Date
+export interface TaskCard {
+    id: string;
+    listId: string;
+    title: string;
+    position: number;
+    description: string;
+    createdAt: number;
+    updatedAt: number;
 }
 
-export interface List {
-  id: string,
-  title: string
-  cards: Card[]
+export interface TaskList {
+    id: string;
+    title: string;
+    position: number;
+    cards: TaskCard[];
 }
 
 export interface Board {
-  id?: string,
-  title: string,
-  lists: List[]
+    id?: string;
+    title: string;
+    lists: TaskList[];
 }

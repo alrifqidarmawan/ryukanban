@@ -3,6 +3,7 @@ import { HiDotsVertical } from "react-icons/hi";
 import { CSS } from "@dnd-kit/utilities";
 import CardModal from "./CardModal";
 import { useSortable } from "@dnd-kit/sortable";
+import { TaskCard as Card } from "@/types/task";
 
 interface TaskCardProps {
     card: Card;

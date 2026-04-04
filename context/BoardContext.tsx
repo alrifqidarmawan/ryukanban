@@ -1,19 +1,23 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { Board as BoardType, List, Card } from "@/types/task";
-import { initialBoard } from "@/lib/mock-data"; 
+import { Board as BoardType, TaskList, TaskCard } from "@/types/task";
+import { initialBoard } from "@/lib/mock-data";
+import { db } from "@/lib/db";
+import { useLiveQuery } from "dexie-react-hooks";
 
 // Define the shape of the context
 interface BoardContextType {
-  board: BoardType;
-  setBoard: React.Dispatch<React.SetStateAction<BoardType>>;
-  addCard: (listId: string, title: string) => void;
-  deleteCard: (cardId: string) => void;
-  updateCard: (cardId: string, newTitle: string) => void;
-  addList: (title: string) => void;
-  updateListTitle: (listId: string, newListTitle: string) => void;
-  deleteList: (listId: string) => void;
+    board: BoardType;
+
+    addCard: (listId: string, title: string) => void;
+    deleteCard: (cardId: string) => void;
+    updateCard: (cardId: string, newTitle: string) => void;
+    addList: (title: string) => void;
+    moveCard: (cardId: string, newListId: string, newPosition: number) => void;
+
+    // updateListTitle: (listId: string, newListTitle: string) => void;
+    // deleteList: (listId: string) => void;
 }
 
 // Create the context
@@ -21,103 +25,92 @@ const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 // Custom hook to use the BoardContext
 export function useBoard() {
-  const context = useContext(BoardContext);
-  if (context === undefined) {
-    throw new Error("useBoard must be used within a BoardProvider");
-  }
-  return context;
+    const context = useContext(BoardContext);
+    if (context === undefined) {
+        throw new Error("useBoard must be used within a BoardProvider");
+    }
+    return context;
 }
 
 // BoardProvider component
 interface BoardProviderProps {
-  children: ReactNode;
+    children: ReactNode;
 }
 
 export function BoardProvider({ children }: BoardProviderProps) {
-  const [board, setBoard] = useState<BoardType>(() => {
-    const savedBoard = localStorage.getItem('board');
-    if (savedBoard !== null && savedBoard !== undefined) {
-      return JSON.parse(savedBoard);
-    } else {
-      return initialBoard;
-    }
-  });
+    const lists = useLiveQuery(() => db.lists.orderBy("position").toArray(), []) || [];
+    const cards = useLiveQuery(() => db.cards.toArray(), []) || [];
 
-  useEffect(() => {
-    localStorage.setItem('board', JSON.stringify(board));
-  }, [board]);
-
-  const uuidv4 = () => {
-    return crypto.randomUUID();
-  };
-
-  const addCard = (listId: string, title: string) => {
-    const newCard: Card = {
-      id: uuidv4(),
-      title,
-      createdAt: new Date(),
+    const uuidv4 = () => {
+        return crypto.randomUUID();
     };
 
-    setBoard((prevBoard) => {
-      const newLists = prevBoard.lists.map((list) => {
-        if (list.id === listId) {
-          return { ...list, cards: [...list.cards, newCard] };
-        }
-        return list;
-      });
-      return { ...prevBoard, lists: newLists };
-    });
-  };
+    const board: BoardType = {
+        title: "",
+        lists: lists.map((list) => ({
+            ...list,
+            cards: cards
+                .filter((card) => card.listId === list.id)
+                .sort((a, b) => a.position - b.position),
+        })),
+    };
 
-  const deleteCard = (cardId: string) => {
-    setBoard((prevBoard) => {
-      const newLists = prevBoard.lists.map((list) => ({
-        ...list,
-        cards: list.cards.filter((card) => card.id !== cardId),
-      }));
-      return { ...prevBoard, lists: newLists };
-    });
-  };
+    const addList = (title: string) => {
+        db.lists.add({ id: uuidv4(), title, position: lists.length + 1, cards: [] });
+    };
 
-  const updateCard = (cardId: string, newTitle: string) => {
-    setBoard((prevBoard) => {
-      const newLists = prevBoard.lists.map((list) => ({
-        ...list,
-        cards: list.cards.map((card) =>
-          card.id === cardId ? { ...card, title: newTitle } : card,
-        ),
-      }));
-      return { ...prevBoard, lists: newLists };
-    });
-  };
-  
-  const addList = (title: string) => {
-    setBoard((prevBoard) => ({
-      ...prevBoard,
-      lists: [...prevBoard.lists, { id: uuidv4(), title, cards: [] }],
-    }));
-  }
-  
-  const updateListTitle = (listId: string, newTitle: string) => {
-    setBoard((prevBoard) => ({
-      ...prevBoard,
-      lists: prevBoard.lists.map((list) =>
-        list.id === listId ? { ...list, title: newTitle } : list,
-      ),
-    }));
-  }
-  
-  const deleteList = (listId: string) => {
-    setBoard((prevBoard) => ({
-      ...prevBoard,
-      lists: prevBoard.lists.filter((list) => list.id !== listId),
-    }));
-  }
-  
+    const addCard = (listId: string, title: string) => {
+        db.cards.add({
+            id: uuidv4(),
+            title,
+            listId,
+            position: cards.filter((card) => card.listId === listId).length + 1,
+            description: "",
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+        });
+    };
 
-  return (
-    <BoardContext.Provider value={{ board, setBoard, addCard, deleteCard, updateCard, addList, updateListTitle, deleteList }}>
-      {children}
-    </BoardContext.Provider>
-  );
+    const moveCard = (cardId: string, newListId: string, newPosition: number) => {
+        db.cards.update(cardId, {
+            listId: newListId,
+            position: newPosition,
+            updatedAt: Date.now(),
+        });
+    };
+    const deleteCard = (cardId: string) => {
+        db.cards.delete(cardId);
+    };
+
+    const updateCard = (cardId: string, newTitle: string) => {
+        db.cards.update(cardId, {
+            title: newTitle,
+            updatedAt: Date.now(),
+        });
+    };
+
+    // const updateListTitle = (listId: string, newTitle: string) => {
+
+    // };
+
+    // const deleteList = (listId: string) => {
+
+    // };
+
+    return (
+        <BoardContext.Provider
+            value={{
+                board,
+                addCard,
+                moveCard,
+                addList,
+                deleteCard,
+                updateCard,
+                // updateListTitle,
+                // deleteList,
+            }}
+        >
+            {children}
+        </BoardContext.Provider>
+    );
 }

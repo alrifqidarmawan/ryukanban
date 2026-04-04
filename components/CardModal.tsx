@@ -8,7 +8,7 @@ import {
     DialogPanel,
     DialogTitle,
 } from "@headlessui/react";
-import { Card } from "@/types/task";
+import { TaskCard as Card } from "@/types/task";
 import { useBoard } from "@/context/BoardContext";
 
 interface CardModalProps {

@@ -1,6 +1,6 @@
 "use client";
 import Column from "@/components/Column";
-import { Board as BoardType, List, Card } from "@/types/task";
+import { Board as BoardType, TaskList, TaskCard as TaskCardType } from "@/types/task";
 import {
     DndContext,
     DragOverlay,
@@ -11,13 +11,13 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { useState } from "react";
-import TaskCard from "./TaskCard";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useBoard } from "@/context/BoardContext";
 import CustomButton from "./CustomButton";
+import TaskCard from "./TaskCard";
 
 export default function Board() {
-    const { board, setBoard, addList } = useBoard();
+    const { board, addList, moveCard } = useBoard();
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -26,7 +26,7 @@ export default function Board() {
         }),
     );
 
-    const [activeCard, setActiveCard] = useState<Card | null>(null);
+    const [activeCard, setActiveCard] = useState<TaskCardType | null>(null);
 
     function handleDragStart(event: DragStartEvent) {
         const { active } = event;
@@ -52,7 +52,7 @@ export default function Board() {
             list.cards.some((card) => card.id === activeId),
         );
 
-        const endList = board.lists.find((list) => list.id === overId);
+        const endList = board.lists.find((list) => list.id === overId || list.cards.some((card) => card.id === overId));
 
         if (!startList || !endList) {
             return;
@@ -70,7 +70,7 @@ export default function Board() {
                     }
                     return list;
                 });
-                setBoard({ ...board, lists: newLists });
+                moveCard(String(activeId), String(startList.id), overIndex);
             }
         } else {
             const draggedCard = startList.cards.find((card) => card.id === activeId);
@@ -89,7 +89,7 @@ export default function Board() {
                 return list;
             });
 
-            setBoard({ ...board, lists: newLists });
+            moveCard(String(activeId), String(endList.id), endList.cards.length);
         }
 
         setActiveCard(null);
@@ -104,7 +104,7 @@ export default function Board() {
             <div className="px-4 pb-4 min-h-[calc(100vh-14rem)]">
                 <div className="overflow-x-auto">
                     <div className="flex justify-start items-start gap-4 min-w-fit">
-                        {board.lists.map((list: List) => {
+                        {board.lists.map((list: TaskList) => {
                             return (
                                 <Column
                                     key={list.id}
@@ -116,8 +116,8 @@ export default function Board() {
                         })}
                         <div className="shrink-0 w-72 bg-grat-200 rounded-lg p-4">
                             <button
+                                className="w-full text-left p-2 rounded-md border-2 border-black shadow-neo mb-4 font-bold uppercase bg-blue-500 hover:bg-blue-600"
                                 onClick={() => addList("New List")}
-                                className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                             >
                                 Add List
                             </button>

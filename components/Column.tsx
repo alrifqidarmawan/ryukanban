@@ -1,4 +1,4 @@
-import { Card } from "@/types/task";
+import { TaskCard as TaskCardType } from "@/types/task";
 import TaskCard from "./TaskCard";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
@@ -9,7 +9,7 @@ import { useBoard } from "@/context/BoardContext";
 interface ColumnProps {
     id: string;
     title: string;
-    cards: Card[];
+    cards: TaskCardType[];
 }
 
 export default function Column({ id, title, cards }: ColumnProps) {
