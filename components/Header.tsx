@@ -10,7 +10,8 @@ export default function Header() {
   return (
     <header className="p-4 bg-white border-b-3 border-black">
       <div className="flex justify-between items-center">
-        <Hello title="Ryukanban" />
+        <Hello title="Ryukanban*" />
+
         <div className="flex gap-2">
           <CustomButton
             label="Home"
